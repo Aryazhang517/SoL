@@ -1,7 +1,7 @@
 import pandas as pd
 
 #df = pd.read_csv("counts_file",encoding = "gbk",engine = "python",sep = "\t")
-df = pd.read_csv("IBD_TPM_all_MG_P1.tsv",encoding="UTF-8",engine = "python",sep = "\t")
+df = pd.read_csv("IBD_TPM_all_MG.tsv",encoding="UTF-8",engine = "python",sep = "\t")
 dict_cluster = {}
 
 with open("Sol_enzyme_cluster_90.tsv", "r") as fin:
