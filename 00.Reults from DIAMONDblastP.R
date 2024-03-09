@@ -3,7 +3,6 @@
 ######################################
 
 library(data.table)
-require(data.table)
 library(stringr)
 library(tibble)
 library(dplyr)
