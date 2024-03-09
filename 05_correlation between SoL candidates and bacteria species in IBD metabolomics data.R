@@ -101,7 +101,7 @@ if(T){
   
 }
 ############################################################################
-### 01 correlation with co-elutions in nature microbiology 2019 IBD ########
+### 01 correlation in nature microbiology 2019 IBD ########
 ############################################################################
 ###correlation
 metabolites_features <- read.csv("../metabolomics_ISF_v2/FT_FTC_data.tsv",sep="\t")
@@ -160,7 +160,7 @@ if(T){
 
 
 ############################################################################
-### 02. correlation with co-elutions in HMP2 ###############################
+### 02. correlation in HMP2 ###############################
 ############################################################################
 ##metadata
 metadata <- read.delim2("./2018-01-01078D-s6/hmp2_metadata.csv",sep=",")
