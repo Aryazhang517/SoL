@@ -15,6 +15,9 @@ library(gg.gap)
 library(ggsci)
 library(plyr)
 library(tibble)
+library(Hmisc)
+
+
 rm(list=ls())
 
 if(T){
@@ -34,9 +37,30 @@ if(T){
     hc <- hclust(dd)
     cormat <-cormat[hc$order, hc$order]
   }
-  
+  flat_cor_mat <- function(cor_r, cor_p){
+    cor_r <- rownames_to_column(as.data.frame(cor_r), var = "row")
+    cor_r <- gather(cor_r, column, cor, -1)
+    cor_p <- rownames_to_column(as.data.frame(cor_p), var = "row")
+    cor_p <- gather(cor_p, column, p, -1)
+    cor_p_matrix <- left_join(cor_r, cor_p, by = c("row", "column"))
+    cor_p_matrix
+  }
+
+
   Cor_heatmap <- function(df,metabolites){
     df_t <-t(df)
+
+    ## check correlation and related p-values ##
+    cormat_p <- rcorr(as.matrix(df_t),type = c("spearman"))
+    melted_cormat_p <- flat_cor_mat(cormat_p$r, cormat_p$P)
+    
+    melted_cormat_p$stars <- " "
+    melted_cormat_p[which(0.05 >= melted_cormat_p$p), "stars"]="*"
+    melted_cormat_p[which(0.01 > melted_cormat_p$p), "stars"]="**"
+    melted_cormat_p[which(0.001 > melted_cormat_p$p), "stars"]="***"
+    write.xlsx(melted_cormat_p,file = paste0("spearman_cor_pvalue",metabolites,".xlsx"))
+
+    ## visualization  ##  
     cormat <- round(cor(df_t,method="spearman"),2)
     cormat <- reorder_cormat(cormat)
     melted_cormat <- melt(cormat, na.rm = TRUE)
@@ -44,7 +68,7 @@ if(T){
     # Melt the correlation matrix
     #melted_cormat <- melt(lower_tri, na.rm = TRUE)
     
-    # Create a ggheatmap
+    ## Create a ggheatmap
     ggheatmap <- ggplot(melted_cormat, aes(Var2, Var1, fill = value))+
       geom_tile(color = "white")+
       scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
@@ -70,6 +94,18 @@ if(T){
   }
   Cor_heatmap_L <- function(df,metabolites){
     df_t <-t(df)
+    
+    ## check correlation and related p-values ##
+    cormat_p <- rcorr(as.matrix(df_t),type = c("spearman"))
+    melted_cormat_p <- flat_cor_mat(cormat_p$r, cormat_p$P)
+    
+    melted_cormat_p$stars <- " "
+    melted_cormat_p[which(0.05 >= melted_cormat_p$p), "stars"]="*"
+    melted_cormat_p[which(0.01 > melted_cormat_p$p), "stars"]="**"
+    melted_cormat_p[which(0.001 > melted_cormat_p$p), "stars"]="***"
+    write.xlsx(melted_cormat_p,file = paste0("spearman_cor_pvalue",metabolites,".xlsx"))
+
+    ## visualization  ##  
     cormat <- round(cor(df_t,method="spearman"),2)
     cormat <- reorder_cormat(cormat)
     lower_tri <- get_lower_tri(cormat)
@@ -109,6 +145,23 @@ species_19nm_1 <- read_xlsx("./nature_microbiology_19/41564_2018_306_MOESM6_ESM.
 
 FT_FTC <- species_19nm_1[-c(1:8), ]
 write.table(FT_FTC,file="species_FTC_data.tsv",sep="\t",quote=F,row.names = F)
+
+species_FTC_0 <- read.delim2("species_FTC_data.tsv",sep="\t")
+rownames(species_FTC_0) <- species_FTC_0$X..Feature...Sample
+species_FTC_0 <- species_FTC_0[-1]
+species_FTC_0[] <- lapply(species_FTC_0,as.numeric)
+
+species_FTC_0 <- species_FTC_0[rowSums(species_FTC_0 >0) > ncol(species_FTC_0)*0.05, ]
+metabolite_1 <- metabolites_features[rownames(metabolites_features) %in% c("HILIC-neg_Cluster_1835","HILIC-neg_Cluster_1821","HILIC-neg_Cluster_1793","HILIC-pos_Cluster_2115","HILIC-pos_Cluster_2155"), ]
+metabolite_2 <- metabolite_1[ ,match(colnames(species_FTC_0),colnames(metabolite_1))]
+
+meta_spec <- rbind(metabolite_2,species_FTC_0)
+
+Cor_heatmap_L(meta_spec,"metabolites_species")
+
+metabolites_species_f <- meta_spec[rownames(meta_spec) %in% c("Bacteroidales_bacterium_ph8","Alistipes_indistinctus","Alistipes_shahii","Alistipes_putredinis","Alistipes_onderdonkii","Alistipes_finegoldii","HILIC-neg_Cluster_1835","HILIC-neg_Cluster_1821","HILIC-neg_Cluster_1793","HILIC-pos_Cluster_2115","HILIC-pos_Cluster_2155"), ]
+
+Cor_heatmap(metabolites_species_f,"metabolites_species_f")
 
 #### differential metabolites ######
 metabolite_1 <- metabolites_features[rownames(metabolites_features) %in% c("HILIC-neg_Cluster_1835","HILIC-neg_Cluster_1821","HILIC-neg_Cluster_1793","HILIC-pos_Cluster_2115","HILIC-pos_Cluster_2155"), ]
