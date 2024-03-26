@@ -5,6 +5,9 @@ library(readxl)
 library(ggplot2)
 library(reshape2)
 library(filenamer)
+library(plyr)
+library(tibble)
+library(Hmisc)
 
 rm(list = ls())
 if(T){
@@ -25,8 +28,28 @@ if(T){
     cormat <-cormat[hc$order, hc$order]
   }
   
+  flat_cor_mat <- function(cor_r, cor_p){
+    cor_r <- rownames_to_column(as.data.frame(cor_r), var = "row")
+    cor_r <- gather(cor_r, column, cor, -1)
+    cor_p <- rownames_to_column(as.data.frame(cor_p), var = "row")
+    cor_p <- gather(cor_p, column, p, -1)
+    cor_p_matrix <- left_join(cor_r, cor_p, by = c("row", "column"))
+    cor_p_matrix
+  }
+  
   Cor_heatmap <- function(df,metabolites){
     df_t <-t(df)
+    ## check correlation and related p-values ##
+    cormat_p <- rcorr(as.matrix(df_t),type = c("pearson"))
+    melted_cormat_p <- flat_cor_mat(cormat_p$r, cormat_p$P)
+    
+    melted_cormat_p$stars <- " "
+    melted_cormat_p[which(0.05 >= melted_cormat_p$p), "stars"]="*"
+    melted_cormat_p[which(0.01 > melted_cormat_p$p), "stars"]="**"
+    melted_cormat_p[which(0.001 > melted_cormat_p$p), "stars"]="***"
+    write.xlsx(melted_cormat_p,file = paste0("pearson_cor_pvalue",metabolites,".xlsx"))
+
+    ## visualization 
     cormat <- round(cor(df_t,method="pearson"),2)
     cormat <- reorder_cormat(cormat)
     lower_tri <- get_lower_tri(cormat)
@@ -57,6 +80,18 @@ if(T){
   }
   Cor_heatmap_L <- function(df,metabolites){
     df_t <-t(df)
+    
+    ## check correlation and related p-values ##
+    cormat_p <- rcorr(as.matrix(df_t),type = c("pearson"))
+    melted_cormat_p <- flat_cor_mat(cormat_p$r, cormat_p$P)
+    
+    melted_cormat_p$stars <- " "
+    melted_cormat_p[which(0.05 >= melted_cormat_p$p), "stars"]="*"
+    melted_cormat_p[which(0.01 > melted_cormat_p$p), "stars"]="**"
+    melted_cormat_p[which(0.001 > melted_cormat_p$p), "stars"]="***"
+    write.xlsx(melted_cormat_p,file = paste0("pearson_cor_pvalue",metabolites,".xlsx"))
+
+    ## visualization 
     cormat <- round(cor(df_t,method="pearson"),2)
     cormat <- reorder_cormat(cormat)
     lower_tri <- get_lower_tri(cormat)
