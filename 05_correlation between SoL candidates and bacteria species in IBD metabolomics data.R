@@ -55,7 +55,7 @@ if(T){
     melted_cormat_p <- flat_cor_mat(cormat_p$r, cormat_p$P)
     
     melted_cormat_p$stars <- " "
-    melted_cormat_p[which(0.05 >= melted_cormat_p$p), "stars"]="*"
+    melted_cormat_p[which(0.05 > melted_cormat_p$p), "stars"]="*"
     melted_cormat_p[which(0.01 > melted_cormat_p$p), "stars"]="**"
     melted_cormat_p[which(0.001 > melted_cormat_p$p), "stars"]="***"
     write.xlsx(melted_cormat_p,file = paste0("spearman_cor_pvalue",metabolites,".xlsx"))
@@ -100,7 +100,7 @@ if(T){
     melted_cormat_p <- flat_cor_mat(cormat_p$r, cormat_p$P)
     
     melted_cormat_p$stars <- " "
-    melted_cormat_p[which(0.05 >= melted_cormat_p$p), "stars"]="*"
+    melted_cormat_p[which(0.05 > melted_cormat_p$p), "stars"]="*"
     melted_cormat_p[which(0.01 > melted_cormat_p$p), "stars"]="**"
     melted_cormat_p[which(0.001 > melted_cormat_p$p), "stars"]="***"
     write.xlsx(melted_cormat_p,file = paste0("spearman_cor_pvalue",metabolites,".xlsx"))
